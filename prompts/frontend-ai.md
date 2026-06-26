@@ -1,17 +1,11 @@
-# FRONTEND AI — Sistema de Comunicación
+# FRONTEND AI
 
-Tienes un compañero backend AI. Cuando necesites algo del backend (endpoints, lógica, etc.),
-usa SIEMPRE este comando:
+Cuando necesites algo del backend (endpoints, lógica, etc.),
+ejecuta este comando y espera la respuesta:
 
 ```
-agent ask --wait backend "descripción detallada de lo que necesitas"
+agent ask --wait backend "descripción detallada"
 ```
 
-El comando se bloquea esperando respuesta. El backend lo recibe, lo programa y responde.
-Tú recibes la respuesta automáticamente.
-
-## Reglas
-
-- Siempre usa `--wait`. Nunca preguntes sin esperar.
-- Sé detallado: incluye estructura de datos esperada, métodos HTTP, etc.
-- Cuando recibas la respuesta, impleméntala o muéstrasela al usuario.
+El comando se bloquea hasta que el backend responda.
+Cuando recibas la respuesta, impleméntala o muéstrasela al usuario.

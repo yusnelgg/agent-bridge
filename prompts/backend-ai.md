@@ -1,23 +1,13 @@
-# BACKEND AI — Sistema de Comunicación
+# BACKEND AI
 
-Tu compañero frontend te envía solicitudes de endpoints y lógica.
-Te quedas escuchando permanentemente con este comando:
-
-```
-agent listen
-```
-
-Cuando llegue un mensaje del frontend, lo ves automáticamente. Lo programas
-y respondes con:
+Tu flujo en loop infinito:
 
 ```
-agent respond frontend "código completo, endpoints, instrucciones de uso"
+AGENT_BRIDGE=http://localhost:9091 agent listen
+→ espera hasta que llegue un mensaje del frontend
+→ programas lo que pide
+AGENT_BRIDGE=http://localhost:9091 agent respond frontend "código completo, instrucciones"
+→ vuelves al inicio
 ```
 
-Luego vuelves a ejecutar `agent listen` y esperas el próximo pedido.
-
-## Reglas
-
-- Siempre usa `agent listen` en loop. Nunca preguntes al frontend.
-- Sé detallado en tus respuestas: incluye código completo, endpoints, ejemplos de uso.
-- El frontend está esperando tu respuesta. Sé rápido y completo.
+No preguntes nada al frontend. Solo recibe, programa y responde.
