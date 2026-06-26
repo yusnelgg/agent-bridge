@@ -42,6 +42,20 @@ func main() {
 	}
 	defer s.Close()
 
+	natsPort := cfg.NATSPort
+	if natsPort == 0 {
+		natsPort = 4222
+	}
+
+	var embeddedNATS *nats.EmbeddedServer
+	if cfg.ServerMode {
+		embeddedNATS, err = nats.StartEmbeddedServer(natsPort)
+		if err != nil {
+			log.Fatalf("error iniciando NATS embebido: %v", err)
+		}
+		defer embeddedNATS.Close()
+	}
+
 	nc, err := nats.New(cfg.NATSURL, cfg.Identity, s)
 	if err != nil {
 		log.Fatalf("error conectando a NATS: %v", err)

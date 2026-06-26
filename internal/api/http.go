@@ -2,8 +2,8 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/z4d3s/agent-bridge/internal/nats"
@@ -76,6 +76,7 @@ func (h *HTTPServer) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		Content:   req.Content,
 		TaskID:    req.TaskID,
 		Files:     req.Files,
+		CreatedAt: time.Now(),
 		Read:      false,
 	}
 
@@ -122,12 +123,15 @@ func (h *HTTPServer) handleDelegateTask(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	now := time.Now()
+
 	task := &protocol.Task{
 		ID:          uuid.New().String(),
 		From:        h.identity,
 		To:          req.To,
 		Description: req.Description,
 		Status:      protocol.TaskPending,
+		CreatedAt:   now,
 	}
 
 	if err := h.store.SaveTask(task); err != nil {
@@ -138,6 +142,7 @@ func (h *HTTPServer) handleDelegateTask(w http.ResponseWriter, r *http.Request) 
 	msg := &protocol.Message{
 		ID:      uuid.New().String(),
 		From:    h.identity,
+		CreatedAt: now,
 		To:      req.To,
 		Type:    protocol.TypeTaskDelegate,
 		Content: req.Description,

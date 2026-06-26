@@ -3,6 +3,7 @@ package nats
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/nats-io/nats.go"
 	"github.com/z4d3s/agent-bridge/internal/protocol"
@@ -64,6 +65,27 @@ func (c *Client) handleMessage(m *nats.Msg) {
 	if err := c.store.SaveMessage(&msg); err != nil {
 		log.Printf("[nats] error saving message: %v", err)
 		return
+	}
+
+	if msg.Type == protocol.TypeTaskDelegate && msg.TaskID != "" {
+		task := &protocol.Task{
+			ID:          msg.TaskID,
+			From:        msg.From,
+			To:          msg.To,
+			Description: msg.Content,
+			Status:      protocol.TaskPending,
+			CreatedAt:   time.Now(),
+		}
+		if err := c.store.SaveTask(task); err != nil {
+			log.Printf("[nats] error saving task: %v", err)
+			return
+		}
+	}
+
+	if msg.Type == protocol.TypeTaskResult && msg.TaskID != "" {
+		if err := c.store.UpdateTaskStatus(msg.TaskID, protocol.TaskDone, msg.Content); err != nil {
+			log.Printf("[nats] error updating task: %v", err)
+		}
 	}
 
 	log.Printf("[nats] mensaje recibido de %s: %s", msg.From, msg.Type)

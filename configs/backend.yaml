@@ -1,5 +1,7 @@
 identity: "backend"
 listen_addr: "127.0.0.1:9091"
 nats_url: "nats://127.0.0.1:4222"
-db_path: "agent-bridge.db"
+nats_port: 4222
+db_path: "agent-bridge-backend.db"
+server_mode: false
 mcp_server: true

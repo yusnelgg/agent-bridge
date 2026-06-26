@@ -28,7 +28,9 @@ type Config struct {
 	Identity   string `yaml:"identity"`
 	ListenAddr string `yaml:"listen_addr"`
 	NATSURL    string `yaml:"nats_url"`
+	NATSPort   int    `yaml:"nats_port"`
 	DBPath     string `yaml:"db_path"`
+	ServerMode bool   `yaml:"server_mode"`
 	MCPServer  bool   `yaml:"mcp_server"`
 }
 

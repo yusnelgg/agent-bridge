@@ -1,15 +1,9 @@
 # ── Configuración de agent-bridge ─────────────────────────
 
-identity: "frontend"              # Tu identidad en la red
-listen_addr: "127.0.0.1:9090"     # Puerto para API HTTP local
-nats_url: "nats://100.x.x.x:4222" # URL del servidor NATS (IP Tailscale del host)
-db_path: "agent-bridge.db"        # Base de datos SQLite local
-
-# MCP server (solo si usas Claude Code)
-mcp_server: false
-
-# peers: define los otros agentes
-# peers:
-#   backend:
-#     name: "backend"
-#     subject: "agent.backend"
+identity: "frontend"                # Tu identidad en la red
+listen_addr: "127.0.0.1:9090"       # Puerto para API HTTP local
+nats_url: "nats://127.0.0.1:4222"   # URL del servidor NATS
+nats_port: 4222                     # Puerto NATS
+db_path: "agent-bridge.db"          # Base de datos SQLite local
+server_mode: true                   # true = inicia NATS embebido
+mcp_server: false                   # true = expone MCP (para Claude Code)
