@@ -5,3 +5,5 @@
 .env
 agent-bridge
 agent
+agent-bridge*.zip
+dist/

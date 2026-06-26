@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build Linux
+        run: |
+          mkdir -p dist/linux/{bin,configs,prompts}
+          GOOS=linux GOARCH=amd64 go build -o dist/linux/bin/agent-bridge ./cmd/agent-bridge/
+          GOOS=linux GOARCH=amd64 go build -o dist/linux/bin/agent ./cmd/agent-cli/
+          strip dist/linux/bin/agent-bridge dist/linux/bin/agent
+          cp configs/frontend.yaml configs/backend.yaml dist/linux/configs/
+          cp prompts/*.md dist/linux/prompts/
+          cp AGENTS.md dist/linux/
+          cp install.sh dist/linux/
+
+      - name: Build Windows
+        run: |
+          mkdir -p dist/windows/{bin,configs,prompts}
+          GOOS=windows GOARCH=amd64 go build -o dist/windows/bin/agent-bridge.exe ./cmd/agent-bridge/
+          GOOS=windows GOARCH=amd64 go build -o dist/windows/bin/agent.exe ./cmd/agent-cli/
+          cp configs/frontend.yaml configs/backend.yaml dist/windows/configs/
+          cp prompts/*.md dist/windows/prompts/
+          cp AGENTS.md dist/windows/
+          cp install.bat dist/windows/
+
+      - name: Create install.sh for Linux
+        run: |
+          cat > dist/linux/install.sh << 'EOF'
+#!/bin/bash
+set -e
+DIR="$(cd "$(dirname "$0")" && pwd)"
+BIN_DIR="/usr/local/bin"
+CONFIG_DIR="$HOME/.agent-bridge"
+echo "Installing Agent Bridge..."
+sudo cp "$DIR/bin/agent" "$BIN_DIR/agent"
+sudo cp "$DIR/bin/agent-bridge" "$BIN_DIR/agent-bridge"
+sudo chmod +x "$BIN_DIR/agent" "$BIN_DIR/agent-bridge"
+mkdir -p "$CONFIG_DIR"
+cp "$DIR/configs/frontend.yaml" "$CONFIG_DIR/frontend.yaml"
+cp "$DIR/configs/backend.yaml" "$CONFIG_DIR/backend.yaml"
+cp "$DIR/AGENTS.md" "$CONFIG_DIR/AGENTS.md"
+cp -r "$DIR/prompts" "$CONFIG_DIR/"
+echo "Done. Binaries in $BIN_DIR, configs in $CONFIG_DIR."
+EOF
+          chmod +x dist/linux/install.sh
+
+      - name: Create install.bat for Windows
+        run: |
+          cat > dist/windows/install.bat << 'BAT'
+@echo off
+chcp 65001 >nul
+set TARGET_DIR=%USERPROFILE%\agent-bridge
+mkdir "%TARGET_DIR%\bin" "%TARGET_DIR%\configs" "%TARGET_DIR%\prompts" 2>nul
+copy /Y "%~dp0bin\agent.exe" "%TARGET_DIR%\bin\agent.exe" >nul
+copy /Y "%~dp0bin\agent-bridge.exe" "%TARGET_DIR%\bin\agent-bridge.exe" >nul
+copy /Y "%~dp0configs\frontend.yaml" "%TARGET_DIR%\configs\frontend.yaml" >nul
+copy /Y "%~dp0configs\backend.yaml" "%TARGET_DIR%\configs\backend.yaml" >nul
+copy /Y "%~dp0AGENTS.md" "%TARGET_DIR%\AGENTS.md" >nul
+copy /Y "%~dp0prompts\frontend-ai.md" "%TARGET_DIR%\prompts\frontend-ai.md" >nul
+copy /Y "%~dp0prompts\backend-ai.md" "%TARGET_DIR%\prompts\backend-ai.md" >nul
+for /f "tokens=2*" %%A in ('reg query HKCU\Environment /v Path 2^>nul ^| find "Path"') do set OLD_PATH=%%B
+echo !OLD_PATH! | find /i "%TARGET_DIR%\bin" >nul
+if %errorlevel% neq 0 setx PATH "%TARGET_DIR%\bin;!OLD_PATH!"
+echo Installed. Restart your terminal.
+pause
+BAT
+
+      - name: Create zips
+        run: |
+          cd dist/linux && zip -r ../../agent-bridge-linux.zip . && cd ../..
+          cd dist/windows && zip -r ../../agent-bridge-windows.zip . && cd ../..
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            agent-bridge-linux.zip
+            agent-bridge-windows.zip
+          generate_release_notes: true

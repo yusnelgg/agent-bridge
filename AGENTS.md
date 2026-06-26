@@ -80,15 +80,15 @@ export AGENT_BRIDGE=http://localhost:9091
 
 ## Instalación
 
-Los binarios `agent` y `agent-bridge` ya están en `/usr/local/bin/`.
-Si no, compila con `make build` y copia los binarios al PATH.
+Ver [README.md](README.md#install) o descargar desde [Releases](https://github.com/z4d3s/agent-bridge/releases/latest).
 
 Para correr los bridges:
 
 ```bash
 # Frontend (hostea NATS)
-agent-bridge -config configs/frontend.yaml
+agent-bridge -config ~/.agent-bridge/frontend.yaml
 
 # Backend
-agent-bridge -config configs/backend.yaml
+export AGENT_BRIDGE=http://localhost:9091
+agent-bridge -config ~/.agent-bridge/backend.yaml
 ```
