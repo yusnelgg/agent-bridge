@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Bridge — Documentación</title>
+<style>
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --bg-code: #0f172a;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --accent: #22d3ee;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 280px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    padding: 2rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .sidebar h1 {
+    font-size: 1.25rem;
+    padding: 0 1.5rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sidebar h1 span { color: var(--primary); }
+
+  .sidebar nav { padding: 0 0.75rem; }
+
+  .sidebar nav a {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.15s;
+  }
+
+  .sidebar nav a:hover,
+  .sidebar nav a.active {
+    color: var(--text);
+    background: rgba(99, 102, 241, 0.1);
+  }
+
+  .sidebar .nav-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 1rem 0.75rem 0.35rem;
+    font-weight: 600;
+  }
+
+  .main {
+    flex: 1;
+    margin-left: 280px;
+    padding: 0;
+    max-width: 900px;
+  }
+
+  .main-content {
+    padding: 3rem 4rem 6rem;
+  }
+
+  /* ── Typography ── */
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2:first-child { margin-top: 0; }
+
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+    color: var(--accent);
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p { margin-bottom: 1rem; color: var(--text-muted); }
+
+  a { color: var(--primary); }
+
+  ul, ol {
+    margin: 0 0 1.5rem 1.5rem;
+    color: var(--text-muted);
+  }
+
+  li { margin-bottom: 0.35rem; }
+
+  /* ── Code ── */
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: var(--bg-code);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--accent);
+  }
+
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1rem 0 1.5rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .card h4 { margin-top: 0; }
+
+  .card.code-block { padding: 0; }
+  .card.code-block pre { border: none; margin: 0; border-radius: 8px; }
+
+  .info {
+    border-left: 3px solid var(--primary);
+    background: rgba(99, 102, 241, 0.08);
+    padding: 1rem 1.25rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+  }
+
+  .info strong { color: var(--primary); }
+
+  .warning {
+    border-left: 3px solid var(--yellow);
+    background: rgba(251, 191, 36, 0.08);
+    padding: 1rem 1.25rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: var(--bg-card);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  td { color: var(--text-muted); }
+
+  tr:hover td { background: rgba(99, 102, 241, 0.04); }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2em 0.6em;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-get { background: rgba(34, 211, 238, 0.15); color: var(--accent); }
+  .badge-post { background: rgba(74, 222, 128, 0.15); color: var(--green); }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero h1 span { color: var(--primary); }
+
+  .hero p {
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .hero .version {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Diagram ── */
+  .diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+
+  .diagram .hl { color: var(--primary); font-weight: 600; }
+  .diagram .hl2 { color: var(--accent); font-weight: 600; }
+  .diagram .arrow { color: var(--text-muted); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .main-content { padding: 2rem 1.5rem; }
+    .hero h1 { font-size: 1.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar">
+    <h1>⛁ <span>Agent</span>Bridge</h1>
+    <nav>
+      <div class="nav-label">Empezar</div>
+      <a href="#intro">Introducción</a>
+      <a href="#architecture">Arquitectura</a>
+      <a href="#quickstart">Quick Start</a>
+
+      <div class="nav-label">Configuración</div>
+      <a href="#config">Config</a>
+      <a href="#examples">Configs de ejemplo</a>
+
+      <div class="nav-label">API Reference</div>
+      <a href="#api-messages">Mensajes</a>
+      <a href="#api-tasks">Tareas</a>
+      <a href="#api-context">Contexto</a>
+      <a href="#api-health">Health</a>
+
+      <div class="nav-label">MCP Tools</div>
+      <a href="#mcp-tools">Para Claude Code</a>
+
+      <div class="nav-label">Uso</div>
+      <a href="#flow">Flujo de trabajo</a>
+      <a href="#opencode">Integración con opencode</a>
+      <a href="#tailscale">Tailscale</a>
+
+      <div class="nav-label">Proyecto</div>
+      <a href="#structure">Estructura</a>
+      <a href="#build">Compilar</a>
+    </nav>
+  </aside>
+
+  <!-- ─── Main ─── -->
+  <main class="main">
+    <div class="main-content">
+
+      <!-- ─── Hero ─── -->
+      <section class="hero">
+        <h1><span>Agent</span>Bridge</h1>
+        <p>Conecta agentes de IA entre distintas PCs para que colaboren y compartan información en tiempo real.</p>
+        <span class="version">v1.0.0 • Go + NATS + MCP</span>
+      </section>
+
+      <!-- ─── Introducción ─── -->
+      <h2 id="intro">Introducción</h2>
+      <p>
+        <strong>Agent Bridge</strong> es un daemon en Go que permite que agentes de IA
+        (opencode, Claude Code, Cursor, cualquier AI que pueda hacer HTTP) se comuniquen
+        entre sí a través de distintas PCs. Es <strong>agnóstico al modelo de IA</strong>:
+        cada PC puede usar el asistente que quiera.
+      </p>
+
+      <div class="info">
+        <strong>Caso de uso típico:</strong> Dos desarrolladores en distintos países — uno frontend, uno backend —
+        quieren que sus asistentes AI colaboren. El frontend le pide a su IA un endpoint, su IA le pregunta
+        a la IA del backend, la IA del backend lo implementa y reporta el resultado.
+      </div>
+
+      <h3>Características</h3>
+      <ul>
+        <li><strong>Sin dependencias externas</strong> — NATS server embebido, no necesitas instalar nada</li>
+        <li><strong>IA Agnóstico</strong> — Cada lado usa el AI que quiera: opencode, Claude Code, Cursor, etc.</li>
+        <li><strong>API REST local</strong> — Tu AI habla con el bridge via HTTP en localhost</li>
+        <li><strong>MCP Server</strong> — Claude Code y Cursor se conectan nativamente via MCP</li>
+        <li><strong>Persistencia SQLite</strong> — Mensajes y tareas se guardan localmente</li>
+        <li><strong>P2P via NATS</strong> — Comunicación eficiente pub/sub entre bridges</li>
+        <li><strong>Tailscale friendly</strong> — Funciona perfecto sobre Tailscale sin abrir puertos</li>
+      </ul>
+
+      <!-- ─── Arquitectura ─── -->
+      <h2 id="architecture">Arquitectura</h2>
+
+      <div class="diagram">
+        <span class="hl">PC 1 (Frontend)</span>                        <span class="hl2">PC 2 (Backend)</span><br>
+        ┌──────────────────────────────┐       ┌──────────────────────────────┐<br>
+        │  opencode / Cursor           │       │  Claude Code / Cursor        │<br>
+        │       │ HTTP (localhost)     │       │       │ MCP / HTTP           │<br>
+        │  ┌────┴───────────────┐      │       │  ┌────┴───────────────┐      │<br>
+        │  │  <span class="hl">agent-bridge</span>       │      │       │  │  <span class="hl2">agent-bridge</span>       │      │<br>
+        │  │  :9090             │◄─────┼───────┼─►│  :9091             │      │<br>
+        │  │  NATS embebido     │      │  NATS  │  │  cliente NATS      │      │<br>
+        │  └────────────────────┘      │  via   │  └────────────────────┘      │<br>
+        └──────────────────────────────┘  VPN   └──────────────────────────────┘</div>
+
+      <p>
+        El bridge de cada PC expone una API HTTP local. Cuando un agente AI quiere
+        comunicarse con otro, envía un mensaje a su bridge local, que lo publica en NATS.
+        El bridge destino lo recibe y lo persiste en SQLite. El AI destino lo consulta
+        via HTTP o lo recibe via MCP.
+      </p>
+
+      <h3>Componentes</h3>
+      <table>
+        <tr><th>Componente</th><th>Rol</th></tr>
+        <tr><td><code>agent-bridge</code></td><td>Daemon Go que corre en cada PC</td></tr>
+        <tr><td><code>NATS embebido</code></td><td>Message broker pub/sub (se activa con <code>server_mode: true</code>)</td></tr>
+        <tr><td><code>MCP Server</code></td><td>Expone herramientas para Claude Code / Cursor (opcional)</td></tr>
+        <tr><td><code>SQLite</code></td><td>Persistencia local de mensajes y tareas</td></tr>
+        <tr><td><code>REST API</code></td><td>Interfaz HTTP para que cualquier AI se conecte</td></tr>
+      </table>
+
+      <!-- ─── Quick Start ─── -->
+      <h2 id="quickstart">Quick Start</h2>
+
+      <h3>Prerrequisitos</h3>
+      <ul>
+        <li>Go 1.21+</li>
+        <li>Opcional: <a href="https://tailscale.com">Tailscale</a> para conectar PCs en distintas redes</li>
+      </ul>
+
+      <h3>1. Compilar</h3>
+      <pre><code>git clone &lt;tu-repo&gt; agent-bridge
+cd agent-bridge
+make build</code></pre>
+
+      <h3>2. Configurar</h3>
+      <p>Crea un archivo <code>agent-config.yaml</code>:</p>
+      <pre><code>identity: "frontend"
+listen_addr: "127.0.0.1:9090"
+nats_url: "nats://127.0.0.1:4222"
+nats_port: 4222
+db_path: "agent-bridge.db"
+server_mode: true
+mcp_server: false</code></pre>
+
+      <h3>3. Correr el bridge</h3>
+      <pre><code>./agent-bridge -config agent-config.yaml</code></pre>
+
+      <div class="info">
+        <strong>Tip:</strong> Si <code>server_mode</code> es <code>true</code>, el bridge inicia su propio NATS server embebido.
+        No necesitas instalar nada aparte. Solo un bridge necesita tener <code>server_mode: true</code>;
+        los otros se conectan a él.
+      </div>
+
+      <h3>4. Probar comunicación</h3>
+      <pre><code># Enviar mensaje
+curl -s localhost:9090/messages/send \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"backend","type":"ask","content":"Hola backend"}'
+
+# Leer mensajes recibidos
+curl -s localhost:9090/messages/new?unread=true</code></pre>
+
+      <!-- ─── Config ─── -->
+      <h2 id="config">Configuración</h2>
+
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Default</th><th>Descripción</th></tr>
+        <tr>
+          <td><code>identity</code></td>
+          <td>string</td>
+          <td>—</td>
+          <td>Nombre único de este agente (ej: <code>frontend</code>, <code>backend</code>)</td>
+        </tr>
+        <tr>
+          <td><code>listen_addr</code></td>
+          <td>string</td>
+          <td><code>127.0.0.1:9090</code></td>
+          <td>Dirección y puerto de la API HTTP local</td>
+        </tr>
+        <tr>
+          <td><code>nats_url</code></td>
+          <td>string</td>
+          <td>—</td>
+          <td>URL del servidor NATS (ej: <code>nats://127.0.0.1:4222</code>)</td>
+        </tr>
+        <tr>
+          <td><code>nats_port</code></td>
+          <td>int</td>
+          <td><code>4222</code></td>
+          <td>Puerto NATS (útil cuando <code>server_mode: true</code>)</td>
+        </tr>
+        <tr>
+          <td><code>db_path</code></td>
+          <td>string</td>
+          <td><code>agent-bridge.db</code></td>
+          <td>Ruta al archivo SQLite</td>
+        </tr>
+        <tr>
+          <td><code>server_mode</code></td>
+          <td>bool</td>
+          <td><code>false</code></td>
+          <td>Inicia NATS server embebido (solo uno necesita tenerlo)</td>
+        </tr>
+        <tr>
+          <td><code>mcp_server</code></td>
+          <td>bool</td>
+          <td><code>false</code></td>
+          <td>Activa MCP server para Claude Code / Cursor</td>
+        </tr>
+      </table>
+
+      <h2 id="examples">Configs de ejemplo</h2>
+
+      <h3>Frontend (hostea NATS)</h3>
+      <pre><code>identity: "frontend"
+listen_addr: "127.0.0.1:9090"
+nats_url: "nats://127.0.0.1:4222"
+nats_port: 4222
+db_path: "agent-bridge-frontend.db"
+server_mode: true
+mcp_server: false</code></pre>
+
+      <h3>Backend (cliente NATS + MCP)</h3>
+      <pre><code>identity: "backend"
+listen_addr: "127.0.0.1:9091"
+nats_url: "nats://127.0.0.1:4222"
+nats_port: 4222
+db_path: "agent-bridge-backend.db"
+server_mode: false
+mcp_server: true</code></pre>
+
+      <div class="warning">
+        <strong>Para producción remota:</strong> Cambia <code>nats_url</code> por la IP Tailscale del que hostea NATS.
+        Ej: <code>nats://100.x.x.x:4222</code>
+      </div>
+
+      <!-- ─── API Reference ─── -->
+      <h2 id="api-messages">API: Mensajes</h2>
+
+      <h3>Enviar mensaje</h3>
+      <p><span class="badge badge-post">POST</span> <code>/messages/send</code></p>
+      <p>Envía un mensaje a otro agente.</p>
+      <pre><code>curl -s localhost:9090/messages/send \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "to": "backend",
+    "type": "ask",
+    "content": "¿Qué endpoint necesito para usuarios?"
+  }'</code></pre>
+      <table>
+        <tr><th>Campo</th><th>Tipo</th><th>Requerido</th><th>Descripción</th></tr>
+        <tr><td><code>to</code></td><td>string</td><td>✅</td><td>Identidad del agente destino</td></tr>
+        <tr><td><code>type</code></td><td>string</td><td>✅</td><td><code>ask</code>, <code>respond</code>, <code>task_delegate</code>, <code>task_result</code>, <code>share_context</code></td></tr>
+        <tr><td><code>content</code></td><td>string</td><td>✅</td><td>Contenido del mensaje</td></tr>
+        <tr><td><code>task_id</code></td><td>string</td><td>❌</td><td>ID de tarea asociada (opcional)</td></tr>
+        <tr><td><code>files</code></td><td>array</td><td>❌</td><td>Lista de rutas de archivos</td></tr>
+      </table>
+
+      <h3>Leer mensajes</h3>
+      <p><span class="badge badge-get">GET</span> <code>/messages/new?unread=true</code></p>
+      <p>Obtiene los mensajes recibidos. Por defecto solo los no leídos.</p>
+
+      <h3>Marcar como leído</h3>
+      <p><span class="badge badge-post">POST</span> <code>/messages/read</code></p>
+      <pre><code>curl -s localhost:9090/messages/read \
+  -H 'Content-Type: application/json' \
+  -d '{"id":"uuid-del-mensaje"}'</code></pre>
+
+      <h2 id="api-tasks">API: Tareas</h2>
+
+      <h3>Delegar tarea</h3>
+      <p><span class="badge badge-post">POST</span> <code>/tasks/delegate</code></p>
+      <pre><code>curl -s localhost:9090/tasks/delegate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "to": "backend",
+    "description": "Crear endpoint GET /api/analytics/dashboard con usuarios activos, conversiones y revenue"
+  }'</code></pre>
+
+      <h3>Listar tareas</h3>
+      <p><span class="badge badge-get">GET</span> <code>/tasks/list?active=true</code></p>
+      <p>Lista tareas pendientes o todas (<code>?active=false</code>).</p>
+
+      <h3>Actualizar estado de tarea</h3>
+      <p><span class="badge badge-post">POST</span> <code>/tasks/status</code></p>
+      <pre><code>curl -s localhost:9091/tasks/status \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "task_id": "uuid-de-la-tarea",
+    "status": "done",
+    "result": "Endpoint creado en GET /api/analytics/dashboard"
+  }'</code></pre>
+
+      <h2 id="api-context">API: Compartir contexto</h2>
+      <p><span class="badge badge-post">POST</span> <code>/context/share</code></p>
+      <pre><code>curl -s localhost:9090/context/share \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "to": "backend",
+    "content": "Estos son los types que uso en frontend",
+    "files": ["src/types/user.ts", "src/types/analytics.ts"]
+  }'</code></pre>
+
+      <h2 id="api-health">API: Health</h2>
+      <p><span class="badge badge-get">GET</span> <code>/health</code></p>
+      <pre><code>curl localhost:9090/health
+{"identity":"frontend","status":"ok"}</code></pre>
+
+      <!-- ─── MCP ─── -->
+      <h2 id="mcp-tools">MCP Tools (para Claude Code / Cursor)</h2>
+      <p>
+        Cuando <code>mcp_server: true</code>, el bridge expone un servidor MCP via stdio.
+        Claude Code y Cursor lo detectan automáticamente. Las herramientas disponibles son:
+      </p>
+
+      <table>
+        <tr><th>Tool</th><th>Descripción</th></tr>
+        <tr>
+          <td><code>agent_check_messages</code></td>
+          <td>Revisa mensajes nuevos de otros agentes</td>
+        </tr>
+        <tr>
+          <td><code>agent_send_message</code></td>
+          <td>Envía un mensaje a otro agente</td>
+        </tr>
+        <tr>
+          <td><code>agent_delegate_task</code></td>
+          <td>Delega una tarea a otro agente</td>
+        </tr>
+        <tr>
+          <td><code>agent_task_result</code></td>
+          <td>Reporta el resultado de una tarea delegada</td>
+        </tr>
+        <tr>
+          <td><code>agent_share_context</code></td>
+          <td>Comparte contexto/archivos con otro agente</td>
+        </tr>
+      </table>
+
+      <h3>Configurar en Claude Code</h3>
+      <p>Agrega esto a tu <code>claude.json</code> o <code>.claude/settings.json</code>:</p>
+      <pre><code>{
+  "mcpServers": {
+    "agent-bridge": {
+      "command": "/ruta/completa/agent-bridge",
+      "args": ["-config", "/ruta/completa/configs/backend.yaml"],
+      "env": {}
+    }
+  }
+}</code></pre>
+
+      <!-- ─── Flow ─── -->
+      <h2 id="flow">Flujo de trabajo</h2>
+
+      <h3>Frontend necesita un endpoint</h3>
+      <div class="card">
+        <p><strong>1.</strong> Tú le dices a opencode:</p>
+        <pre><code>"Necesito un endpoint GET /api/analytics/dashboard que devuelva usuarios activos,
+conversiones del día y revenue semanal. Háblalo con la IA del backend."</code></pre>
+
+        <p><strong>2.</strong> opencode ejecuta:</p>
+        <pre><code>curl localhost:9090/tasks/delegate \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"backend","description":"Crear endpoint GET /api/analytics/dashboard con activeUsers, dailyConversions, weeklyRevenue"}'</pre></code>
+
+        <p><strong>3.</strong> La IA del backend (Claude Code) revisa:</p>
+        <pre><code>agent_check_messages</code></pre>
+
+        <p><strong>4.</strong> Claude Code implementa el endpoint y responde:</p>
+        <pre><code>agent_task_result task_id="..." result="Endpoint creado. Devuelve: { activeUsers, dailyConversions, weeklyRevenue }"</code></pre>
+
+        <p><strong>5.</strong> Tu opencode recibe la respuesta, te dice cómo consumirlo.</p>
+      </div>
+
+      <h2 id="opencode">Integración con opencode</h2>
+      <p>
+        opencode puede ejecutar comandos shell. La forma más simple es que le digas:
+      </p>
+      <pre><code>Ejecuta: curl -s localhost:9090/messages/send -H 'Content-Type: application/json' \
+  -d '{"to":"backend","type":"ask","content":"..."}'</code></pre>
+
+      <p>O crea un script <code>agent.sh</code> en tu PATH para hacerlo más limpio:</p>
+      <pre><code>#!/bin/bash
+# agent.sh — CLI para agent-bridge
+BRIDGE="http://localhost:9090"
+
+case "$1" in
+  ask)
+    curl -s $BRIDGE/messages/send \
+      -H 'Content-Type: application/json' \
+      -d "{\"to\":\"$2\",\"type\":\"ask\",\"content\":\"$3\"}"
+    ;;
+  check)
+    curl -s $BRIDGE/messages/new?unread=true
+    ;;
+  delegate)
+    shift
+    curl -s $BRIDGE/tasks/delegate \
+      -H 'Content-Type: application/json' \
+      -d "{\"to\":\"$1\",\"description\":\"$2\"}"
+    ;;
+  tasks)
+    curl -s $BRIDGE/tasks/list?active=${2:-true}
+    ;;
+  *)
+    echo "Uso: agent ask|check|delegate|tasks"
+    ;;
+esac</code></pre>
+
+      <div class="info">
+        <strong>Consejo:</strong> Pon <code>agent.sh</code> en tu PATH y desde opencode solo dices
+        "Ejecuta: agent ask backend 'Necesito endpoint X'". Mucho más limpio.
+      </div>
+
+      <h2 id="tailscale">Conexión remota con Tailscale</h2>
+      <p>
+        Para conectar PCs en distintas redes (países distintos), <strong>Tailscale</strong>
+        es la opción más simple:
+      </p>
+
+      <ol>
+        <li>Ambos instalan <a href="https://tailscale.com/download">Tailscale</a></li>
+        <li>Se conectan a la misma red (se crea una "tailnet")</li>
+        <li>Cada uno obtiene una IP tipo <code>100.x.x.x</code></li>
+        <li>El que hostea NATS usa IP <code>0.0.0.0:4222</code> (ya configurado)</li>
+        <li>El otro apunta su <code>nats_url</code> a <code>nats://100.x.x.x:4222</code></li>
+      </ol>
+
+      <div class="card">
+        <h4>Razones para usar Tailscale</h4>
+        <ul>
+          <li>✅ No necesitas abrir puertos en el router</li>
+          <li>✅ No necesitas IP pública</li>
+          <li>✅ Conexión cifrada (WireGuard)</li>
+          <li>✅ Funciona detrás de NAT, firewalls, etc.</li>
+          <li>✅ Gratis para uso personal</li>
+        </ul>
+      </div>
+
+      <!-- ─── Estructura ─── -->
+      <h2 id="structure">Estructura del proyecto</h2>
+
+      <pre><code>agent-bridge/
+├── cmd/
+│   └── agent-bridge/
+│       └── main.go              # Entry point
+├── internal/
+│   ├── protocol/
+│   │   └── types.go             # Tipos de mensajes y config
+│   ├── store/
+│   │   └── sqlite.go            # Persistencia local (SQLite)
+│   ├── nats/
+│   │   ├── client.go            # Cliente NATS pub/sub
+│   │   └── server.go            # NATS server embebido
+│   └── api/
+│       ├── http.go              # API REST local
+│       └── mcp.go               # Servidor MCP (Claude Code)
+├── configs/
+│   ├── frontend.yaml            # Config ejemplo frontend
+│   ├── backend.yaml             # Config ejemplo backend
+│   └── agent-bridge.yaml.example
+├── docs/
+│   └── index.html               # Esta documentación
+├── Makefile
+├── go.mod
+└── go.sum</code></pre>
+
+      <h2 id="build">Compilar</h2>
+
+      <pre><code># Compilar
+make build
+
+# Compilar para otra plataforma
+GOOS=linux GOARCH=amd64 make build
+GOOS=darwin GOARCH=arm64 make build  # Mac M1/M2
+
+# Limpiar
+make clean</code></pre>
+
+      <div class="info" style="margin-top: 3rem; text-align: center;">
+        <strong>Agent Bridge</strong> — Proyecto open source. Construido con Go, NATS, SQLite y MCP.
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+</body>
+</html>
