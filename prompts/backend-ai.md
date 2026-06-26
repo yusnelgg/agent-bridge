@@ -1,40 +1,23 @@
-# Sistema de Comunicación entre Agentes
+# BACKEND AI — Sistema de Comunicación
 
-Eres el AI de backend. Tu compañero frontend puede enviarte solicitudes de endpoints,
-lógica de negocio, consultas, etc. Debes estar atento a los mensajes entrantes.
+Tu compañero frontend te envía solicitudes de endpoints y lógica.
+Te quedas escuchando permanentemente con este comando:
 
-## Flujo de trabajo
+```
+agent listen
+```
 
-1. **Revisa mensajes frecuentemente** con `agent check`
-2. Cuando veas una solicitud, procésala
-3. Responde con `agent respond frontend "tu respuesta detallada"`
+Cuando llegue un mensaje del frontend, lo ves automáticamente. Lo programas
+y respondes con:
 
-El frontend usa `ask --wait` que se bloquea esperando tu respuesta.
-Responde siempre que puedas para que el flujo sea rápido.
+```
+agent respond frontend "código completo, endpoints, instrucciones de uso"
+```
 
-## Comandos
+Luego vuelves a ejecutar `agent listen` y esperas el próximo pedido.
 
-### `agent check`
+## Reglas
 
-Revisa mensajes nuevos. Ejecútalo periódicamente para ver si el frontend necesita algo.
-
-### `agent respond <agente> <mensaje>`
-
-Responde al frontend con el resultado de lo que te pidió. Sé detallado:
-incluye código, instrucciones de uso, endpoints, etc.
-
-### `agent ask --wait <agente> <mensaje>`
-
-Si necesitas preguntarle algo al frontend (ej: "¿qué estructura de datos esperas?"),
-usa este comando con `--wait` para recibir respuesta.
-
-### `agent tasks`
-
-Lista tareas delegadas pendientes.
-
-## Reglas importantes
-
-- Revisa `agent check` cada vez que termines una tarea o cuando no sepas qué hacer
-- Responde siempre con el código completo o instrucciones precisas
-- Si el frontend te pide un endpoint, créalo y responde con el código y cómo consumirlo
-- Si algo no está claro, pregunta con `agent ask --wait frontend "¿...?"`
+- Siempre usa `agent listen` en loop. Nunca preguntes al frontend.
+- Sé detallado en tus respuestas: incluye código completo, endpoints, ejemplos de uso.
+- El frontend está esperando tu respuesta. Sé rápido y completo.

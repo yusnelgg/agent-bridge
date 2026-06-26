@@ -31,6 +31,8 @@ func main() {
 	switch os.Args[1] {
 	case "ask":
 		askCmd()
+	case "listen":
+		listenCmd()
 	case "check":
 		checkCmd()
 	case "watch":
@@ -55,19 +57,19 @@ func printUsage() {
 
 Uso:
   agent ask [--wait] <to> <message>     Enviar mensaje (--wait bloquea hasta respuesta)
+  agent listen                          Esperar hasta que llegue un mensaje nuevo
   agent check                           Revisar mensajes nuevos
-  agent watch                           Monitorear mensajes en tiempo real
   agent delegate [--wait] <to> <desc>   Delegar tarea
   agent respond <to> <message>          Responder
   agent tasks [--active]                Listar tareas
+  agent watch                           Monitorear mensajes en vivo
 
 Variables de entorno:
   AGENT_BRIDGE  URL del bridge (default: http://localhost:9090)
 
 Ejemplos:
   agent ask --wait backend "Crea endpoint GET /api/users"
-  agent check
-  agent watch
+  agent listen
   agent respond frontend "Endpoint creado"`)
 }
 
@@ -146,6 +148,50 @@ func askCmd() {
 					return
 				}
 			}
+		}
+	}
+}
+
+func listenCmd() {
+	deadline := time.Now().Add(30 * time.Minute)
+	poll := time.NewTicker(2 * time.Second)
+	defer poll.Stop()
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt)
+
+	fmt.Fprintf(os.Stderr, "👂 escuchando mensajes entrantes...\n")
+
+	for {
+		select {
+		case <-done:
+			fmt.Fprintln(os.Stderr, "\n✗ cancelado")
+			os.Exit(1)
+		case <-poll.C:
+			if time.Now().After(deadline) {
+				fmt.Fprintln(os.Stderr, "✗ timeout (30 min)")
+				os.Exit(1)
+			}
+			resp, err := getJSON("/messages/new?unread=true")
+			if err != nil {
+				continue
+			}
+			var msgs []struct {
+				ID      string `json:"id"`
+				From    string `json:"from"`
+				To      string `json:"to"`
+				Type    string `json:"type"`
+				Content string `json:"content"`
+				TaskID  string `json:"task_id,omitempty"`
+			}
+			json.Unmarshal(resp, &msgs)
+			if len(msgs) == 0 {
+				continue
+			}
+			m := msgs[0]
+			postJSON("/messages/read", map[string]string{"id": m.ID})
+			fmt.Printf("[%s → %s] (%s)\n%s\n", m.From, m.To, m.Type, m.Content)
+			return
 		}
 	}
 }

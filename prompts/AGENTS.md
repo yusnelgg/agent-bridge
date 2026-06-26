@@ -1,41 +1,64 @@
-# AGENTS — Comunicación entre IAs
+# AGENT BRIDGE — Sistema de Comunicación entre Agentes
 
-Este proyecto tiene un sistema que permite que dos asistentes AI (frontend y backend)
-se comuniquen automáticamente entre sí.
+Tú y otro AI trabajan juntos en el mismo proyecto. Se comunican a través del comando `agent`.
 
-## Cómo usarlo
+## Comandos
 
-1. Asegúrate de que `agent-bridge` esté corriendo (consulta README)
-2. El comando `agent` está disponible en el PATH
-3. Sigue las instrucciones según tu rol:
-
-### Si eres FRONTEND
-
-Usa `agent ask --wait backend "descripción"` cuando necesites algo del backend.
-El comando se bloquea esperando respuesta. Cuando el backend responda,
-recibirás el resultado directamente.
-
-### Si eres BACKEND
-
-Revisa `agent check` periódicamente para ver si el frontend necesita algo.
-Cuando recibas una solicitud, prográmala y responde con `agent respond frontend "resultado"`.
-
-## Comandos rápidos
-
-| Comando | Descripción |
+| Comando | Qué hace |
 |---|---|
-| `agent ask --wait <to> <msg>` | Pregunta y espera respuesta |
-| `agent check` | Revisa mensajes nuevos |
-| `agent delegate --wait <to> <desc>` | Delega tarea y espera resultado |
-| `agent respond <to> <msg>` | Responde a un mensaje |
-| `agent tasks` | Lista tareas pendientes |
-| `agent watch` | Monitorea mensajes en tiempo real |
+| `agent ask --wait <agente> <mensaje>` | Envía mensaje y **espera bloqueante** hasta recibir respuesta |
+| `agent listen` | **Espera bloqueante** hasta que llegue un mensaje nuevo |
+| `agent respond <agente> <mensaje>` | Responde a un mensaje |
+| `agent check` | Revisa mensajes nuevos (no bloqueante) |
+| `agent delegate --wait <agente> <desc>` | Delega tarea y espera resultado |
 
-## Rol actual
+## Variable de entorno
 
-<!-- El usuario debe indicar aquí su rol: frontend o backend -->
-Rol: frontend
+```bash
+# Frontend (default, no hace falta)
+AGENT_BRIDGE=http://localhost:9090
 
-## Bridge URL
+# Backend (necesario)
+export AGENT_BRIDGE=http://localhost:9091
+```
 
-El bridge local corre en: http://localhost:9090
+## Flujo para FRONTEND
+
+Tu rol es **pedir cosas**. El backend programa y responde.
+
+```
+1. Necesitas algo del backend
+   → agent ask --wait backend "descripción detallada de lo que necesitas"
+   → El comando se bloquea esperando. No hagas nada más.
+
+2. El backend recibe, procesa y responde
+   → Recibes la respuesta automáticamente
+   → Se la muestras al usuario o la implementas
+```
+
+## Flujo para BACKEND
+
+Tu rol es **recibir pedidos y programarlos**. Te quedas escuchando permanentemente.
+
+```
+1. Escuchas hasta que llegue un pedido
+   → agent listen
+   → El comando se bloquea hasta que el frontend envíe algo
+
+2. Recibes un mensaje del frontend
+   → Lees qué necesita
+   → Lo programas
+
+3. Respondes  
+   → agent respond frontend "código completo o instrucciones de lo que hiciste"
+
+4. Vuelves al paso 1
+   → agent listen
+```
+
+## Reglas importantes
+
+- **Frontend**: usa SIEMPRE `agent ask --wait`. Nunca preguntes sin esperar respuesta.
+- **Backend**: usa SIEMPRE `agent listen` en loop. Nunca preguntes, solo responde.
+- **Sé específico**: incluye código, endpoints, estructuras de datos en tus respuestas.
+- **Si no entiendes algo**: responde con lo que tienes hasta ahora y pide aclaración.
