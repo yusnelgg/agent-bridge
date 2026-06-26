@@ -80,7 +80,7 @@ export AGENT_BRIDGE=http://localhost:9091
 
 ## Instalación
 
-Ver [README.md](README.md#install) o descargar desde [Releases](https://github.com/z4d3s/agent-bridge/releases/latest).
+Ver [README.md](README.md#install) o descargar desde [Releases](https://github.com/yusnelgg/agent-bridge/releases/latest).
 
 Para correr los bridges:
 

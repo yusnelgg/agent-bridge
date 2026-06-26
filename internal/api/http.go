@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/z4d3s/agent-bridge/internal/nats"
-	"github.com/z4d3s/agent-bridge/internal/protocol"
-	"github.com/z4d3s/agent-bridge/internal/store"
+	"github.com/yusnelgg/agent-bridge/internal/nats"
+	"github.com/yusnelgg/agent-bridge/internal/protocol"
+	"github.com/yusnelgg/agent-bridge/internal/store"
 )
 
 type HTTPServer struct {

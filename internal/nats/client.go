@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	"github.com/z4d3s/agent-bridge/internal/protocol"
-	"github.com/z4d3s/agent-bridge/internal/store"
+	"github.com/yusnelgg/agent-bridge/internal/protocol"
+	"github.com/yusnelgg/agent-bridge/internal/store"
 )
 
 type Client struct {

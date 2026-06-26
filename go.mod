@@ -1,4 +1,4 @@
-module github.com/z4d3s/agent-bridge
+module github.com/yusnelgg/agent-bridge
 
 go 1.26.4
 

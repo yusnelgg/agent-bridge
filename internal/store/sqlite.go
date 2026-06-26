@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/z4d3s/agent-bridge/internal/protocol"
+	"github.com/yusnelgg/agent-bridge/internal/protocol"
 
 	_ "modernc.org/sqlite"
 )

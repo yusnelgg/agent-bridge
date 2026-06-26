@@ -2,7 +2,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26%2B-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](https://github.com/z4d3s/agent-bridge/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](https://github.com/yusnelgg/agent-bridge/pulls)
 
 **Agent Bridge** connects two AI coding assistants (opencode, Claude Code, Cursor) running on different PCs so they can collaborate autonomously.
 
@@ -31,7 +31,7 @@
 ### Linux / macOS
 
 ```bash
-curl -L https://github.com/z4d3s/agent-bridge/releases/latest/download/agent-bridge-linux.zip -o agent-bridge.zip
+curl -L https://github.com/yusnelgg/agent-bridge/releases/latest/download/agent-bridge-linux.zip -o agent-bridge.zip
 unzip agent-bridge.zip
 cd agent-bridge-dist
 ./install.sh
@@ -39,12 +39,12 @@ cd agent-bridge-dist
 
 ### Windows
 
-Download `agent-bridge-windows.zip` from [Releases](https://github.com/z4d3s/agent-bridge/releases/latest), unzip, and double-click `install.bat`.
+Download `agent-bridge-windows.zip` from [Releases](https://github.com/yusnelgg/agent-bridge/releases/latest), unzip, and double-click `install.bat`.
 
 ### From source
 
 ```bash
-git clone https://github.com/z4d3s/agent-bridge.git
+git clone https://github.com/yusnelgg/agent-bridge.git
 cd agent-bridge
 make build
 sudo cp agent agent-bridge /usr/local/bin/
@@ -130,7 +130,7 @@ mcp_server: false           # true to expose MCP tools (Claude Code)
 
 ## Documentation
 
-Full docs at **[z4d3s.github.io/agent-bridge](https://z4d3s.github.io/agent-bridge)**
+Full docs at **[yusnelgg.github.io/agent-bridge](https://yusnelgg.github.io/agent-bridge)**
 
 ## License
 
