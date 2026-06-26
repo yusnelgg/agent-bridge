@@ -17,8 +17,12 @@ dist:
 	GOOS=windows GOARCH=amd64 go build -o tmp-dist/windows/bin/agent.exe ./cmd/agent-cli/
 	cp configs/frontend.yaml configs/backend.yaml tmp-dist/linux/configs/
 	cp configs/frontend.yaml configs/backend.yaml tmp-dist/windows/configs/
-	cp AGENTS.md tmp-dist/linux/ tmp-dist/windows/
-	cp prompts/*.md tmp-dist/linux/prompts/ tmp-dist/windows/prompts/
+	cp AGENTS.md tmp-dist/linux/AGENTS.md
+	cp AGENTS.md tmp-dist/windows/AGENTS.md
+	cp prompts/frontend-ai.md tmp-dist/linux/prompts/
+	cp prompts/backend-ai.md tmp-dist/linux/prompts/
+	cp prompts/frontend-ai.md tmp-dist/windows/prompts/
+	cp prompts/backend-ai.md tmp-dist/windows/prompts/
 	cp install.sh tmp-dist/linux/
 	cp install.bat tmp-dist/windows/
 	cd tmp-dist/linux && zip -r ../../agent-bridge-linux.zip . && cd ../..
@@ -27,7 +31,7 @@ dist:
 	ls -lh agent-bridge-*.zip
 
 clean:
-	rm -f agent-bridge agent *.db agent-bridge-*.zip
+	rm -f agent-bridge agent *.db agent-bridge-*.zip install.sh install.bat
 	rm -rf dist tmp-dist
 
 run-frontend:

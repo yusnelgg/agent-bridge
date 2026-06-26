@@ -11,10 +11,10 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/z4d3s/agent-bridge/internal/api"
-	"github.com/z4d3s/agent-bridge/internal/nats"
-	"github.com/z4d3s/agent-bridge/internal/protocol"
-	"github.com/z4d3s/agent-bridge/internal/store"
+	"github.com/yusnelgg/agent-bridge/internal/api"
+	"github.com/yusnelgg/agent-bridge/internal/nats"
+	"github.com/yusnelgg/agent-bridge/internal/protocol"
+	"github.com/yusnelgg/agent-bridge/internal/store"
 )
 
 func main() {
