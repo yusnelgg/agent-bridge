@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -187,9 +188,36 @@ func (h *HTTPServer) handleTaskStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
+
+	task, err := h.store.GetTaskByID(req.TaskID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if task == nil {
+		http.Error(w, "task not found", http.StatusNotFound)
+		return
+	}
+
 	if err := h.store.UpdateTaskStatus(req.TaskID, protocol.TaskStatus(req.Status), req.Result); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if req.Status == string(protocol.TaskDone) || req.Status == string(protocol.TaskFailed) {
+		msg := &protocol.Message{
+			ID:      uuid.New().String(),
+			From:    h.identity,
+			To:      task.From,
+			Type:    protocol.TypeTaskResult,
+			Content: req.Result,
+			TaskID:  req.TaskID,
+			CreatedAt: time.Now(),
+		}
+		targetSubject := "agent." + task.From
+		if err := h.nats.SendMessage(msg, targetSubject); err != nil {
+			log.Printf("[http] error notificando resultado: %v", err)
+		}
 	}
 
 	writeJSON(w, map[string]string{"status": "updated"})

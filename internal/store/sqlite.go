@@ -159,6 +159,28 @@ func (s *Store) GetTasks(receiver string, activeOnly bool) ([]*protocol.Task, er
 	return tasks, nil
 }
 
+func (s *Store) GetTaskByID(taskID string) (*protocol.Task, error) {
+	row := s.db.QueryRow(
+		`SELECT id, sender, receiver, description, status, result, created_at, done_at
+		 FROM tasks WHERE id = ?`, taskID,
+	)
+	t := &protocol.Task{}
+	var statusStr, createdAt, doneAt sql.NullString
+	if err := row.Scan(&t.ID, &t.From, &t.To, &t.Description, &statusStr, &t.Result, &createdAt, &doneAt); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	t.Status = protocol.TaskStatus(statusStr.String)
+	t.CreatedAt, _ = time.Parse(time.RFC3339, createdAt.String)
+	if doneAt.Valid {
+		d, _ := time.Parse(time.RFC3339, doneAt.String)
+		t.DoneAt = &d
+	}
+	return t, nil
+}
+
 func (s *Store) UpdateTaskStatus(taskID string, status protocol.TaskStatus, result string) error {
 	now := time.Now().Format(time.RFC3339)
 	_, err := s.db.Exec(
