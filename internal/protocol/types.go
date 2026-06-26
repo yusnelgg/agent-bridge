@@ -25,21 +25,11 @@ type Message struct {
 }
 
 type Config struct {
-	Identity    string          `yaml:"identity"`
-	ListenAddr  string          `yaml:"listen_addr"`
-	NATSURL     string          `yaml:"nats_url"`
-	NATSPort    int             `yaml:"nats_port"`
-	Peers       map[string]Peer `yaml:"peers"`
-	DBPath      string          `yaml:"db_path"`
-	ServerMode  bool            `yaml:"server_mode"`
-	MCPServer   bool            `yaml:"mcp_server"`
-	MCPPort     int             `yaml:"mcp_port"`
-}
-
-type Peer struct {
-	Name      string `yaml:"name"`
-	Subject   string `yaml:"subject"`
-	Inbox     string `yaml:"inbox"`
+	Identity   string `yaml:"identity"`
+	ListenAddr string `yaml:"listen_addr"`
+	NATSURL    string `yaml:"nats_url"`
+	DBPath     string `yaml:"db_path"`
+	MCPServer  bool   `yaml:"mcp_server"`
 }
 
 type TaskStatus string

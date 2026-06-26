@@ -1,0 +1,5 @@
+identity: "frontend"
+listen_addr: "127.0.0.1:9090"
+nats_url: "nats://100.x.x.x:4222"
+db_path: "agent-bridge.db"
+mcp_server: false
