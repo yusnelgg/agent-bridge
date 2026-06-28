@@ -5,3 +5,4 @@ nats_port: 4222
 db_path: "agent-bridge-frontend.db"
 server_mode: true
 mcp_server: false
+on_message: ""

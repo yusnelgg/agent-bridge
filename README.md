@@ -11,7 +11,7 @@
 │  FRONTEND (Uruguay) │◄───────────────────────►│  BACKEND (EEUU)     │
 │                     │   WebSocket push        │                     │
 │  opencode / Claude  │   (real-time)            │  opencode / Claude  │
-│  "agent ask --wait" │                          │  "agent listen"     │
+│  "agent-bridge ask" │                          │  "agent-bridge listen"│
 └─────────────────────┘                          └─────────────────────┘
 ```
 
@@ -19,7 +19,7 @@
 
 ## Features
 
-- **Zero dependencies** — single binary, no Docker, no Python, no Node.
+- **Zero dependencies** — single binary (`agent-bridge` does everything), no Docker, no Python, no Node.
 - **Real-time** — WebSocket push (fallback a polling si no disponible).
 - **AI-agnostic** — works with opencode, Claude Code, Cursor, or any MCP-capable AI.
 - **Multi-PC** — connect AIs across the internet via Tailscale, ZeroTier, or a VPS.
@@ -52,7 +52,7 @@ cd agent-bridge-dist
 git clone https://github.com/yusnelgg/agent-bridge.git
 cd agent-bridge
 make build
-sudo cp agent agent-bridge /usr/local/bin/
+sudo cp agent-bridge /usr/local/bin/
 ```
 
 ## How it works
@@ -71,28 +71,28 @@ Open **two terminals**.
 
 **Terminal 1 — Frontend** (hosts NATS):
 ```bash
-agent-bridge -config ~/.agent-bridge/frontend.yaml
+agent-bridge serve -config ~/.agent-bridge/frontend.yaml
 ```
 
 **Terminal 2 — Backend**:
 ```bash
 export AGENT_BRIDGE=http://localhost:9091
-agent-bridge -config ~/.agent-bridge/backend.yaml
+agent-bridge serve -config ~/.agent-bridge/backend.yaml
 ```
 
 ### AI flow (no changes needed)
 
 **Frontend AI** asks:
 ```bash
-agent ask --wait backend "Create a REST API with CRUD for users"
+agent-bridge ask --wait backend "Create a REST API with CRUD for users"
 ```
 
 **Backend AI** listens (real-time via WebSocket):
 ```bash
 export AGENT_BRIDGE=http://localhost:9091
-agent listen           # waits for a message (push, no polling)
+agent-bridge listen    # waits for a message (push, no polling)
 # ... reads the request, writes the code ...
-agent respond frontend "Done. Endpoints: POST/GET/PUT/DELETE /api/users"
+agent-bridge respond frontend "Done. Endpoints: POST/GET/PUT/DELETE /api/users"
 ```
 
 ### Connect remotely
@@ -108,13 +108,16 @@ No other changes needed.
 ## Commands
 
 | Command | Description |
-|---|---|
-| `agent ask --wait <agent> <message>` | Send a message and block until reply |
-| `agent listen` | Block until a new message arrives (WebSocket push) |
-| `agent respond <agent> <message>` | Reply to an agent |
-| `agent check` | Check for new messages (non-blocking) |
-| `agent delegate --wait <agent> <task>` | Delegate a task and wait for result |
-| `agent tasks` | List pending tasks |
+|---|---|---|
+| `agent-bridge serve -config <file>` | Start the bridge daemon |
+| `agent-bridge ask --wait <agent> <message>` | Send a message and block until reply |
+| `agent-bridge listen` | Block until a new message arrives (WebSocket push) |
+| `agent-bridge respond <agent> <message>` | Reply to an agent |
+| `agent-bridge check` | Check for new messages (non-blocking) |
+| `agent-bridge delegate --wait <agent> <task>` | Delegate a task and wait for result |
+| `agent-bridge tasks` | List pending tasks |
+| `agent-bridge init` | Generate a config file |
+| `agent-bridge watch` | Live message monitor |
 
 ## Architecture
 

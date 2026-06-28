@@ -1,20 +1,16 @@
 build:
 	go build -o agent-bridge ./cmd/agent-bridge/
-	go build -o agent ./cmd/agent-cli/
 
 install:
 	go install ./cmd/agent-bridge/
-	go install ./cmd/agent-cli/
 
 dist:
 	rm -rf dist tmp-dist
 	mkdir -p tmp-dist/linux/{bin,configs,prompts}
 	mkdir -p tmp-dist/windows/{bin,configs,prompts}
 	GOOS=linux GOARCH=amd64 go build -o tmp-dist/linux/bin/agent-bridge ./cmd/agent-bridge/
-	GOOS=linux GOARCH=amd64 go build -o tmp-dist/linux/bin/agent ./cmd/agent-cli/
-	strip tmp-dist/linux/bin/agent-bridge tmp-dist/linux/bin/agent
+	strip tmp-dist/linux/bin/agent-bridge
 	GOOS=windows GOARCH=amd64 go build -o tmp-dist/windows/bin/agent-bridge.exe ./cmd/agent-bridge/
-	GOOS=windows GOARCH=amd64 go build -o tmp-dist/windows/bin/agent.exe ./cmd/agent-cli/
 	cp configs/frontend.yaml configs/backend.yaml tmp-dist/linux/configs/
 	cp configs/frontend.yaml configs/backend.yaml tmp-dist/windows/configs/
 	cp AGENTS.md tmp-dist/linux/AGENTS.md
@@ -35,7 +31,7 @@ clean:
 	rm -rf dist tmp-dist
 
 run-frontend:
-	./agent-bridge -config configs/frontend.yaml
+	./agent-bridge serve -config configs/frontend.yaml
 
 run-backend:
-	AGENT_BRIDGE=http://localhost:9091 ./agent-bridge -config configs/backend.yaml
+	AGENT_BRIDGE=http://localhost:9091 ./agent-bridge serve -config configs/backend.yaml

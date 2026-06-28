@@ -112,6 +112,36 @@ func (s *Store) GetMessages(receiver string, unreadOnly bool) ([]*protocol.Messa
 	return msgs, nil
 }
 
+func (s *Store) GetAllMessages(identity string) ([]*protocol.Message, error) {
+	rows, err := s.db.Query(
+		`SELECT id, sender, receiver, type, content, task_id, files, created_at, read
+		 FROM messages WHERE sender = ? OR receiver = ?
+		 ORDER BY created_at DESC LIMIT 200`, identity, identity,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var msgs []*protocol.Message
+	for rows.Next() {
+		m := &protocol.Message{}
+		var typeStr, createdAt, filesStr string
+		var readInt int
+		if err := rows.Scan(&m.ID, &m.From, &m.To, &typeStr, &m.Content, &m.TaskID, &filesStr, &createdAt, &readInt); err != nil {
+			return nil, err
+		}
+		m.Type = protocol.MessageType(typeStr)
+		m.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+		m.Read = readInt == 1
+		if filesStr != "" && filesStr != "[]" {
+			json.Unmarshal([]byte(filesStr), &m.Files)
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, nil
+}
+
 func (s *Store) MarkRead(msgID string) error {
 	_, err := s.db.Exec("UPDATE messages SET read = 1 WHERE id = ?", msgID)
 	return err

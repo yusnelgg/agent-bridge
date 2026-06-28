@@ -4,7 +4,7 @@ Cuando necesites algo del backend (endpoints, lógica, etc.),
 ejecuta este comando y espera la respuesta:
 
 ```
-agent ask --wait backend "descripción detallada"
+agent-bridge ask --wait backend "descripción detallada"
 ```
 
 El comando se bloquea hasta que el backend responda.

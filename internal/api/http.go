@@ -10,6 +10,7 @@ import (
 	"github.com/yusnelgg/agent-bridge/internal/nats"
 	"github.com/yusnelgg/agent-bridge/internal/protocol"
 	"github.com/yusnelgg/agent-bridge/internal/store"
+	"github.com/yusnelgg/agent-bridge/internal/web"
 )
 
 type HTTPServer struct {
@@ -31,7 +32,9 @@ func NewHTTPServer(addr, identity string, s *store.Store, nc *nats.Client, hub *
 	mux.HandleFunc("/tasks/status", h.handleTaskStatus)
 	mux.HandleFunc("/context/share", h.handleShareContext)
 	mux.HandleFunc("/health", h.handleHealth)
+	mux.HandleFunc("/messages/all", h.handleGetAllMessages)
 	mux.HandleFunc("/ws", h.hub.HandleWS)
+	mux.HandleFunc("/", web.DashboardHandler)
 
 	return &http.Server{
 		Addr:    addr,
@@ -264,6 +267,22 @@ func (h *HTTPServer) handleShareContext(w http.ResponseWriter, r *http.Request) 
 	}
 
 	writeJSON(w, map[string]string{"status": "shared"})
+}
+
+func (h *HTTPServer) handleGetAllMessages(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	msgs, err := h.store.GetAllMessages(h.identity)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]any{
+		"identity": h.identity,
+		"messages": msgs,
+	})
 }
 
 func (h *HTTPServer) handleHealth(w http.ResponseWriter, r *http.Request) {

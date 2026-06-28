@@ -3,10 +3,10 @@
 Tu flujo en loop infinito:
 
 ```
-AGENT_BRIDGE=http://localhost:9091 agent listen
+AGENT_BRIDGE=http://localhost:9091 agent-bridge listen
 → espera hasta que llegue un mensaje del frontend
 → programas lo que pide
-AGENT_BRIDGE=http://localhost:9091 agent respond frontend "código completo, instrucciones"
+AGENT_BRIDGE=http://localhost:9091 agent-bridge respond frontend "código completo, instrucciones"
 → vuelves al inicio
 ```
 

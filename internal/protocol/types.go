@@ -32,6 +32,7 @@ type Config struct {
 	DBPath     string `yaml:"db_path"`
 	ServerMode bool   `yaml:"server_mode"`
 	MCPServer  bool   `yaml:"mcp_server"`
+	OnMessage  string `yaml:"on_message"` // comando a ejecutar al recibir mensaje ({{from}} {{content}})
 }
 
 type TaskStatus string

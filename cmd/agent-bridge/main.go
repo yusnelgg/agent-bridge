@@ -1,94 +1,69 @@
 package main
 
 import (
-	"context"
-	"flag"
-	"log"
-	"net/http"
+	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
-
-	"gopkg.in/yaml.v3"
-
-	"github.com/yusnelgg/agent-bridge/internal/api"
-	"github.com/yusnelgg/agent-bridge/internal/nats"
-	"github.com/yusnelgg/agent-bridge/internal/protocol"
-	"github.com/yusnelgg/agent-bridge/internal/store"
 )
 
 func main() {
-	cfgPath := flag.String("config", "agent-config.yaml", "ruta al archivo de config")
-	flag.Parse()
-
-	data, err := os.ReadFile(*cfgPath)
-	if err != nil {
-		log.Fatalf("error leyendo config: %v", err)
+	if len(os.Args) < 2 {
+		printUsage()
+		os.Exit(1)
 	}
 
-	var cfg protocol.Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		log.Fatalf("error parseando config: %v", err)
+	sub := os.Args[1]
+	// strip subcommand from args for subcommand parsing
+	os.Args = append([]string{os.Args[0] + " " + sub}, os.Args[2:]...)
+
+	switch sub {
+	case "serve":
+		serveCmd()
+	case "ask":
+		askCmd()
+	case "listen":
+		listenCmd()
+	case "respond":
+		respondCmd()
+	case "check":
+		checkCmd()
+	case "watch":
+		watchCmd()
+	case "delegate":
+		delegateCmd()
+	case "tasks":
+		tasksCmd()
+	case "init":
+		initCmd()
+	default:
+		fmt.Fprintf(os.Stderr, "comando desconocido: %s\n\n", sub)
+		printUsage()
+		os.Exit(1)
 	}
+}
 
-	dbPath := cfg.DBPath
-	if dbPath == "" {
-		dbPath = "agent-bridge.db"
-	}
+func printUsage() {
+	fmt.Println(`Agent Bridge — Comunicación entre IAs
 
-	s, err := store.New(dbPath)
-	if err != nil {
-		log.Fatalf("error abriendo db: %v", err)
-	}
-	defer s.Close()
+  Uso:
+    serve       Iniciar el daemon del bridge
+    ask         Enviar mensaje a otro agente
+    listen      Esperar mensaje entrante
+    respond     Responder a un agente
+    check       Revisar mensajes nuevos
+    watch       Monitorear mensajes en vivo
+    delegate    Delegar tarea a otro agente
+    tasks       Listar tareas pendientes
+    init        Generar archivo de configuración
 
-	natsPort := cfg.NATSPort
-	if natsPort == 0 {
-		natsPort = 4222
-	}
+  Ejemplos:
+    agent-bridge serve -config frontend.yaml
+    agent-bridge ask --wait backend "Endpoint GET /api/users"
+    agent-bridge listen
+    agent-bridge respond frontend "Endpoint listo"
+    agent-bridge init --identity backend
 
-	var embeddedNATS *nats.EmbeddedServer
-	if cfg.ServerMode {
-		embeddedNATS, err = nats.StartEmbeddedServer(natsPort)
-		if err != nil {
-			log.Fatalf("error iniciando NATS embebido: %v", err)
-		}
-		defer embeddedNATS.Close()
-	}
+  Variables de entorno:
+    AGENT_BRIDGE  URL del bridge (default: http://localhost:9090)
 
-	hub := api.NewWSHub()
-
-	nc, err := nats.New(cfg.NATSURL, cfg.Identity, s, func(msg *protocol.Message) {
-		hub.Broadcast(msg)
-	})
-	if err != nil {
-		log.Fatalf("error conectando a NATS: %v", err)
-	}
-	defer nc.Close()
-
-	httpServer := api.NewHTTPServer(cfg.ListenAddr, cfg.Identity, s, nc, hub)
-
-	go func() {
-		log.Printf("[http] API escuchando en %s", cfg.ListenAddr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("error en http server: %v", err)
-		}
-	}()
-
-	if cfg.MCPServer {
-		mcpServer := api.NewMCPServer(cfg.Identity, s, nc)
-		go func() {
-			log.Printf("[mcp] servidor MCP iniciado (stdio)")
-			if err := mcpServer.Serve(""); err != nil {
-				log.Printf("[mcp] error: %v", err)
-			}
-		}()
-	}
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("cerrando servidor...")
-	httpServer.Shutdown(context.Background())
+  Documentación: https://github.com/yusnelgg/agent-bridge`)
 }
