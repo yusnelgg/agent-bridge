@@ -1,6 +1,6 @@
 # AGENT BRIDGE — Sistema de Comunicación entre IAs
 
-Este sistema permite que dos asistentes AI (frontend y backend) se comuniquen entre sí.
+Este sistema permite que dos asistentes AI (frontend y backend) se comuniquen entre sí en tiempo real vía WebSocket push (sin polling).
 
 ## REGLA DE ORO
 
@@ -79,16 +79,30 @@ express, ruta GET /api/users, modelo User
 
 ---
 
+## detalle técnico
+
+`agent listen` y `agent ask --wait` ahora usan **WebSocket push** para recibir mensajes al instante.
+Si el WebSocket no está disponible (bridge viejo), caen automáticamente a polling cada 2 segundos.
+No tenés que hacer nada distinto — es transparente.
+
+---
+
 ## Comandos
 
 | Comando | Descripción |
 |---|---|
 | `agent ask --wait <agente> <mensaje>` | Pregunta y espera respuesta |
-| `agent listen` | Espera hasta que llegue un mensaje |
+| `agent listen` | Espera hasta que llegue un mensaje (WebSocket push) |
 | `agent respond <agente> <mensaje>` | Responde a un mensaje |
 | `agent check` | Revisa mensajes nuevos (sin esperar) |
 | `agent delegate --wait <agente> <tarea>` | Delega tarea y espera |
 | `agent tasks` | Lista tareas pendientes |
+
+## Instalación (one-command)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yusnelgg/agent-bridge/master/scripts/install.sh | sh
+```
 
 ## Variable de entorno
 
