@@ -11,17 +11,18 @@ import (
 )
 
 type Client struct {
-	conn     *nats.Conn
-	identity string
-	store    *store.Store
+	conn       *nats.Conn
+	identity   string
+	store      *store.Store
+	onMessage  func(*protocol.Message)
 }
 
-func New(url, identity string, s *store.Store) (*Client, error) {
-	nc, err := nats.Connect(url, nats.Name(identity))
+func New(url, identity string, s *store.Store, onMessage func(*protocol.Message)) (*Client, error) {
+	nc, err := nats.Connect(url, nats.Name(identity), nats.RetryOnFailedConnect(true), nats.MaxReconnects(10), nats.ReconnectWait(2*time.Second))
 	if err != nil {
 		return nil, err
 	}
-	c := &Client{conn: nc, identity: identity, store: s}
+	c := &Client{conn: nc, identity: identity, store: s, onMessage: onMessage}
 
 	subjects := []string{
 		"agent." + identity,
@@ -86,6 +87,10 @@ func (c *Client) handleMessage(m *nats.Msg) {
 		if err := c.store.UpdateTaskStatus(msg.TaskID, protocol.TaskDone, msg.Content); err != nil {
 			log.Printf("[nats] error updating task: %v", err)
 		}
+	}
+
+	if c.onMessage != nil {
+		c.onMessage(&msg)
 	}
 
 	log.Printf("[nats] mensaje recibido de %s: %s", msg.From, msg.Type)

@@ -56,13 +56,17 @@ func main() {
 		defer embeddedNATS.Close()
 	}
 
-	nc, err := nats.New(cfg.NATSURL, cfg.Identity, s)
+	hub := api.NewWSHub()
+
+	nc, err := nats.New(cfg.NATSURL, cfg.Identity, s, func(msg *protocol.Message) {
+		hub.Broadcast(msg)
+	})
 	if err != nil {
 		log.Fatalf("error conectando a NATS: %v", err)
 	}
 	defer nc.Close()
 
-	httpServer := api.NewHTTPServer(cfg.ListenAddr, cfg.Identity, s, nc)
+	httpServer := api.NewHTTPServer(cfg.ListenAddr, cfg.Identity, s, nc, hub)
 
 	go func() {
 		log.Printf("[http] API escuchando en %s", cfg.ListenAddr)

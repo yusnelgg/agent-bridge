@@ -16,10 +16,11 @@ type HTTPServer struct {
 	store    *store.Store
 	nats     *nats.Client
 	identity string
+	hub      *WSHub
 }
 
-func NewHTTPServer(addr, identity string, s *store.Store, nc *nats.Client) *http.Server {
-	h := &HTTPServer{store: s, nats: nc, identity: identity}
+func NewHTTPServer(addr, identity string, s *store.Store, nc *nats.Client, hub *WSHub) *http.Server {
+	h := &HTTPServer{store: s, nats: nc, identity: identity, hub: hub}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/messages/new", h.handleGetMessages)
@@ -30,11 +31,16 @@ func NewHTTPServer(addr, identity string, s *store.Store, nc *nats.Client) *http
 	mux.HandleFunc("/tasks/status", h.handleTaskStatus)
 	mux.HandleFunc("/context/share", h.handleShareContext)
 	mux.HandleFunc("/health", h.handleHealth)
+	mux.HandleFunc("/ws", h.hub.HandleWS)
 
 	return &http.Server{
 		Addr:    addr,
 		Handler: withCORS(mux),
 	}
+}
+
+func (h *HTTPServer) Hub() *WSHub {
+	return h.hub
 }
 
 func (h *HTTPServer) handleGetMessages(w http.ResponseWriter, r *http.Request) {

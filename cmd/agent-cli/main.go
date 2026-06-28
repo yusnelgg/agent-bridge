@@ -11,9 +11,21 @@ import (
 	"os/signal"
 	"strings"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 var baseURL string
+
+type protocolMsg struct {
+	ID      string `json:"id"`
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Type    string `json:"type"`
+	Content string `json:"content"`
+	TaskID  string `json:"task_id,omitempty"`
+	Read    bool   `json:"read"`
+}
 
 func init() {
 	baseURL = os.Getenv("AGENT_BRIDGE")
@@ -109,37 +121,60 @@ func askCmd() {
 		return
 	}
 
-	deadline := time.Now().Add(300 * time.Second)
+	deadline := time.After(300 * time.Second)
 	from := to
-	poll := time.NewTicker(2 * time.Second)
-	defer poll.Stop()
-
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
 
 	fmt.Fprintf(os.Stderr, "⏳ esperando respuesta de %s...\n", from)
 
+	// Try WebSocket first
+	wsMsg := make(chan *protocolMsg, 1)
+	wsErr := make(chan error, 1)
+	go func() {
+		msg, err := listenWS(300 * time.Second)
+		if err != nil {
+			wsErr <- err
+			return
+		}
+		wsMsg <- msg
+	}()
+
+	select {
+	case msg := <-wsMsg:
+		if msg.From == from {
+			postJSON("/messages/read", map[string]string{"id": msg.ID})
+			fmt.Println(msg.Content)
+			return
+		}
+	case <-wsErr:
+		fmt.Fprintf(os.Stderr, "   WebSocket no disponible, usando polling...\n")
+	case <-sig:
+		fmt.Fprintln(os.Stderr, "\n✗ espera cancelada")
+		os.Exit(1)
+	}
+
+	// Fallback: polling
+	poll := time.NewTicker(2 * time.Second)
+	defer poll.Stop()
+
 	for {
 		select {
-		case <-done:
+		case <-sig:
 			fmt.Fprintln(os.Stderr, "\n✗ espera cancelada")
 			os.Exit(1)
 		case <-poll.C:
-			if time.Now().After(deadline) {
+			select {
+			case <-deadline:
 				fmt.Fprintln(os.Stderr, "✗ timeout esperando respuesta")
 				os.Exit(1)
+			default:
 			}
 			msgs, err := getJSON("/messages/new?unread=true")
 			if err != nil {
 				continue
 			}
-			var list []struct {
-				ID      string `json:"id"`
-				From    string `json:"from"`
-				Type    string `json:"type"`
-				Content string `json:"content"`
-				TaskID  string `json:"task_id,omitempty"`
-			}
+			var list []protocolMsg
 			json.Unmarshal(msgs, &list)
 			for _, m := range list {
 				if m.From == from {
@@ -154,13 +189,39 @@ func askCmd() {
 
 func listenCmd() {
 	deadline := time.Now().Add(30 * time.Minute)
-	poll := time.NewTicker(2 * time.Second)
-	defer poll.Stop()
-
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt)
 
 	fmt.Fprintf(os.Stderr, "👂 escuchando mensajes entrantes...\n")
+
+	// Try WebSocket first
+	wsDone := make(chan *protocolMsg, 1)
+	wsErr := make(chan error, 1)
+	go func() {
+		msg, err := listenWS(30 * time.Minute)
+		if err != nil {
+			wsErr <- err
+			return
+		}
+		wsDone <- msg
+	}()
+
+	select {
+	case msg := <-wsDone:
+		postJSON("/messages/read", map[string]string{"id": msg.ID})
+		fmt.Printf("[%s → %s] (%s)\n%s\n", msg.From, msg.To, msg.Type, msg.Content)
+		return
+	case <-wsErr:
+		// WebSocket failed, fall back to polling
+		fmt.Fprintf(os.Stderr, "   WebSocket no disponible, usando polling...\n")
+	case <-done:
+		fmt.Fprintln(os.Stderr, "\n✗ cancelado")
+		os.Exit(1)
+	}
+
+	// Fallback: polling
+	poll := time.NewTicker(2 * time.Second)
+	defer poll.Stop()
 
 	for {
 		select {
@@ -176,14 +237,7 @@ func listenCmd() {
 			if err != nil {
 				continue
 			}
-			var msgs []struct {
-				ID      string `json:"id"`
-				From    string `json:"from"`
-				To      string `json:"to"`
-				Type    string `json:"type"`
-				Content string `json:"content"`
-				TaskID  string `json:"task_id,omitempty"`
-			}
+			var msgs []protocolMsg
 			json.Unmarshal(resp, &msgs)
 			if len(msgs) == 0 {
 				continue
@@ -202,14 +256,7 @@ func checkCmd() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	var msgs []struct {
-		ID      string `json:"id"`
-		From    string `json:"from"`
-		To      string `json:"to"`
-		Type    string `json:"type"`
-		Content string `json:"content"`
-		TaskID  string `json:"task_id,omitempty"`
-	}
+	var msgs []protocolMsg
 	json.Unmarshal(resp, &msgs)
 
 	if len(msgs) == 0 {
@@ -242,14 +289,7 @@ func watchCmd() {
 			if err != nil {
 				continue
 			}
-			var msgs []struct {
-				ID      string `json:"id"`
-				From    string `json:"from"`
-				To      string `json:"to"`
-				Type    string `json:"type"`
-				Content string `json:"content"`
-				TaskID  string `json:"task_id,omitempty"`
-			}
+			var msgs []protocolMsg
 			json.Unmarshal(resp, &msgs)
 			for _, m := range msgs {
 				if seen[m.ID] {
@@ -335,13 +375,7 @@ func delegateCmd() {
 			if err != nil {
 				continue
 			}
-			var msgs []struct {
-				ID      string `json:"id"`
-				From    string `json:"from"`
-				Type    string `json:"type"`
-				Content string `json:"content"`
-				TaskID  string `json:"task_id,omitempty"`
-			}
+			var msgs []protocolMsg
 			json.Unmarshal(msgsResp, &msgs)
 			for _, m := range msgs {
 				if m.TaskID == result.TaskID || (m.From == to && m.Type == "task_result") {
@@ -413,6 +447,55 @@ func tasksCmd() {
 		if t.Result != "" {
 			fmt.Printf("  resultado: %s\n", t.Result)
 		}
+	}
+}
+
+// ── WebSocket ──
+
+func wsURL() string {
+	s := baseURL
+	if strings.HasPrefix(s, "https://") {
+		s = strings.Replace(s, "https://", "wss://", 1)
+	} else {
+		s = strings.Replace(s, "http://", "ws://", 1)
+	}
+	return s + "/ws"
+}
+
+func listenWS(timeout time.Duration) (*protocolMsg, error) {
+	u := wsURL()
+	c, _, err := websocket.DefaultDialer.Dial(u, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+
+	done := make(chan *protocolMsg, 1)
+	errChan := make(chan error, 1)
+
+	go func() {
+		for {
+			_, data, err := c.ReadMessage()
+			if err != nil {
+				errChan <- err
+				return
+			}
+			var msg protocolMsg
+			if err := json.Unmarshal(data, &msg); err != nil {
+				continue
+			}
+			done <- &msg
+			return
+		}
+	}()
+
+	select {
+	case msg := <-done:
+		return msg, nil
+	case err := <-errChan:
+		return nil, err
+	case <-time.After(timeout):
+		return nil, fmt.Errorf("timeout")
 	}
 }
 
