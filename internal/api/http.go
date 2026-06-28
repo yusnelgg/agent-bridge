@@ -96,6 +96,8 @@ func (h *HTTPServer) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.hub.Broadcast(msg)
+
 	writeJSON(w, map[string]string{"status": "sent", "id": msg.ID})
 }
 
@@ -166,6 +168,8 @@ func (h *HTTPServer) handleDelegateTask(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	h.hub.Broadcast(msg)
+
 	writeJSON(w, map[string]string{"status": "delegated", "task_id": task.ID})
 }
 
@@ -227,6 +231,7 @@ func (h *HTTPServer) handleTaskStatus(w http.ResponseWriter, r *http.Request) {
 		if err := h.nats.SendMessage(msg, targetSubject); err != nil {
 			log.Printf("[http] error notificando resultado: %v", err)
 		}
+		h.hub.Broadcast(msg)
 	}
 
 	writeJSON(w, map[string]string{"status": "updated"})
@@ -265,6 +270,8 @@ func (h *HTTPServer) handleShareContext(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	h.hub.Broadcast(msg)
 
 	writeJSON(w, map[string]string{"status": "shared"})
 }
