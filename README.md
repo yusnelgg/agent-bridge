@@ -9,8 +9,8 @@
 ```
 ┌─────────────────────┐          NATS           ┌─────────────────────┐
 │  FRONTEND (Uruguay) │◄───────────────────────►│  BACKEND (EEUU)     │
-│                     │     (Tailscale/VPS)     │                     │
-│  opencode / Claude  │                          │  opencode / Claude  │
+│                     │   WebSocket push        │                     │
+│  opencode / Claude  │   (real-time)            │  opencode / Claude  │
 │  "agent ask --wait" │                          │  "agent listen"     │
 └─────────────────────┘                          └─────────────────────┘
 ```
@@ -20,16 +20,24 @@
 ## Features
 
 - **Zero dependencies** — single binary, no Docker, no Python, no Node.
+- **Real-time** — WebSocket push (fallback a polling si no disponible).
 - **AI-agnostic** — works with opencode, Claude Code, Cursor, or any MCP-capable AI.
 - **Multi-PC** — connect AIs across the internet via Tailscale, ZeroTier, or a VPS.
 - **Embedded NATS** — no external message broker to install or configure.
 - **MCP server** — exposes tools so the AI can send/receive messages natively.
 - **SQLite persistence** — messages and tasks survive restarts.
 
-## Install
+## One-command install
 
-### Linux / macOS
+```bash
+curl -fsSL https://raw.githubusercontent.com/yusnelgg/agent-bridge/master/scripts/install.sh | sh
+```
 
+Auto-detects OS, downloads latest release from GitHub, and installs.
+
+### Manual install
+
+**Linux / macOS:**
 ```bash
 curl -L https://github.com/yusnelgg/agent-bridge/releases/latest/download/agent-bridge-linux.zip -o agent-bridge.zip
 unzip agent-bridge.zip
@@ -37,12 +45,9 @@ cd agent-bridge-dist
 ./install.sh
 ```
 
-### Windows
+**Windows:** Download `agent-bridge-windows.zip` from [Releases](https://github.com/yusnelgg/agent-bridge/releases/latest), unzip, and double-click `install.bat`.
 
-Download `agent-bridge-windows.zip` from [Releases](https://github.com/yusnelgg/agent-bridge/releases/latest), unzip, and double-click `install.bat`.
-
-### From source
-
+**From source:**
 ```bash
 git clone https://github.com/yusnelgg/agent-bridge.git
 cd agent-bridge
@@ -50,39 +55,47 @@ make build
 sudo cp agent agent-bridge /usr/local/bin/
 ```
 
-## Quick Start
+## How it works
 
-### 1. Start the bridges
+### Roles
+
+**FRONTEND** — SOLO consume. Pide endpoints, recibe respuesta, implementa la UI.
+
+**BACKEND** — SOLO programa. Recibe pedidos, escribe TODO el backend, responde con instrucciones de consumo.
+
+Ninguno programa lo que le corresponde al otro. ([Ver REGLA DE ORO completa](AGENTS.md))
+
+### Quick start
 
 Open **two terminals**.
 
 **Terminal 1 — Frontend** (hosts NATS):
 ```bash
-agent-bridge -config configs/frontend.yaml
+agent-bridge -config ~/.agent-bridge/frontend.yaml
 ```
 
 **Terminal 2 — Backend**:
 ```bash
 export AGENT_BRIDGE=http://localhost:9091
-agent-bridge -config configs/backend.yaml
+agent-bridge -config ~/.agent-bridge/backend.yaml
 ```
 
-### 2. The AI flow
+### AI flow (no changes needed)
 
-**Frontend AI** asks for something:
+**Frontend AI** asks:
 ```bash
 agent ask --wait backend "Create a REST API with CRUD for users"
 ```
 
-**Backend AI** listens, codes, and responds:
+**Backend AI** listens (real-time via WebSocket):
 ```bash
 export AGENT_BRIDGE=http://localhost:9091
-agent listen           # waits for a message
+agent listen           # waits for a message (push, no polling)
 # ... reads the request, writes the code ...
 agent respond frontend "Done. Endpoints: POST/GET/PUT/DELETE /api/users"
 ```
 
-### 3. Connect remotely
+### Connect remotely
 
 Set `nats_url` in both configs to the IP of the machine hosting NATS:
 
@@ -97,7 +110,7 @@ No other changes needed.
 | Command | Description |
 |---|---|
 | `agent ask --wait <agent> <message>` | Send a message and block until reply |
-| `agent listen` | Block until a new message arrives |
+| `agent listen` | Block until a new message arrives (WebSocket push) |
 | `agent respond <agent> <message>` | Reply to an agent |
 | `agent check` | Check for new messages (non-blocking) |
 | `agent delegate --wait <agent> <task>` | Delegate a task and wait for result |
@@ -109,12 +122,14 @@ No other changes needed.
 ┌──────────────┐     MCP/HTTP      ┌──────────────┐     NATS      ┌──────────────┐
 │   AI Tool    │◄─────────────────►│  agent-bridge │◄────────────►│  agent-bridge │
 │  (opencode)  │   ask/respond     │   (frontend)  │   pub/sub     │   (backend)   │
-└──────────────┘                   └──────┬───────┘               └──────┬───────┘
-                                          │                              │
-                                    ┌─────▼─────┐                  ┌─────▼─────┐
-                                    │   SQLite   │                  │   SQLite   │
-                                    └───────────┘                  └───────────┘
+└──────────────┘                   └──┬───────┬───┘               └──┬───────┬───┘
+                                      │       │                      │       │
+                                 ┌────▼───┐ ┌▼────────┐        ┌────▼───┐ ┌▼────────┐
+                                 │ SQLite │ │ WS Hub  │        │ SQLite │ │ WS Hub  │
+                                 └────────┘ └─────────┘        └────────┘ └─────────┘
 ```
+
+Messages arrive instantly via **WebSocket push**. If WebSocket is unavailable, `agent listen` falls back to polling (2s interval).
 
 ## Configuration
 
